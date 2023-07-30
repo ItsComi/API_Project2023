@@ -755,11 +755,10 @@ int rimuoviStazione(int kilometro){
             printf("non demolita\n");
             return 0;
         }else{
-            eliminaDS(s);
-
             oldAuto = s->autoMax;
             s->autoMax = 0;
             removedMaxAuto(s, oldAuto);
+            eliminaDS(s);
             rimuoviNodoAshTable(kilometro);
             rimuoviNodoLista(s);
             //printf("stazione al kilometro %d rimossa\n", kilometro);
@@ -1067,7 +1066,7 @@ int calcolaNuovaAutonomia(stazione* staz, int oldMax){
     }
     return newMax;
 }
-int removedMaxAuto(stazione* staz, int oldAutonomia){//this function can be void
+int removedMaxAuto2(stazione* staz, int oldAutonomia){//this function can be void
     stazione* miaStaz = NULL;
     stazione* successive = NULL;
     stazione* precedenti = NULL;
@@ -1105,6 +1104,51 @@ int removedMaxAuto(stazione* staz, int oldAutonomia){//this function can be void
     }
     return 1;
 }
+int removedMaxAuto(stazione * staz, int oldAutonomia){
+    //conf iniziale
+    int x, y, z;
+    stazione * miaStaz = NULL;
+    stazione * precedenti = NULL;
+    stazione * successive = NULL;
+    miaStaz = staz;
+    z = staz->km;
+    x = z + oldAutonomia;
+    y = z - oldAutonomia;
+    if(x>999999999) x=999999999;
+    if(y<0) y=0;
+    successive = ricercaVicinoDS(x);
+    precedenti = ricercaVicinoDS(y);
+
+    if(precedenti == NULL || successive == NULL) return 2;//just added. (if no station is available how can we add a car??)
+
+    if(successive->km > x) successive = successive->preStazione;
+    if(precedenti->km < y) precedenti = precedenti->nextStazione;
+    //fine conf iniziale
+    while(successive != miaStaz){
+        if(successive->maxPreStazione != NULL){//usless
+            if(successive->maxPreStazione->km < z) break;
+        }
+        if((successive->km - miaStaz->km) > miaStaz->autoMax){
+            aggiornaMaxPrevStaz(miaStaz, successive);
+        }else{//le prossime stazioni le raggiungevo e le raggiungo ancora
+            break;
+        }
+        successive = successive->preStazione;
+    }
+    while(precedenti != miaStaz){
+        if(precedenti->maxNextStazione != NULL){//ulsess
+            if(precedenti->maxNextStazione->km > z) break;
+        }
+        if((miaStaz->km - precedenti->km) > miaStaz->autoMax){
+            aggiornaMaxNextStaz(miaStaz, precedenti);
+        }else{//le prossime stazioni le raggingevo e le raggiungo ancora
+            break;
+        }
+        precedenti = precedenti->nextStazione;
+    }
+    return 1;
+}
+
 int inserisciTappa(int k){
     if(indiceTappe<dimVettoreTappe){
         tappe[indiceTappe] = k;
