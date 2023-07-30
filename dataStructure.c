@@ -292,6 +292,8 @@ int main(){
     stazione * p = NULL;
     p = &s1;
     aggiungiStazioneDS(p->km, p);
+    printf("%d ------>> %d\n", s1.km-10, ricercaVicinoDS(s1.km-10)->km);
+    printf("%d ------>> %d\n", s1.km-10000, ricercaVicinoDS(s1.km-10000)->km);
     p = &s4;
     aggiungiStazioneDS(p->km, p);
     p = &s5;
