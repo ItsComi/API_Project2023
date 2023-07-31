@@ -794,10 +794,11 @@ int aggiungiAuto(int kmStazione, int autonomia, int stampa){//stampa == 1 only i
     }
     return 0;//reaching this point only of the park slot is full
 }
-int aggiungiStazione(int kilometro){
-    stazione * s = NULL;
-    stazione * support = NULL;
-    if(sIniziale == NULL){
+
+int aggiungiStazione(int kilometro) {
+    stazione *s = NULL;
+    stazione *support = NULL;
+    if (sIniziale == NULL) {
         //printf("aggiungo stazione al kilometro %d\n", kilometro);
         printf("aggiunta\n");
         sIniziale = dammiMemoriaNodi();
@@ -806,12 +807,12 @@ int aggiungiStazione(int kilometro){
         insertIntoTable(kilometro, sIniziale);
         aggiungiStazioneDS(kilometro, sIniziale);
         return 1;
-    }else{
-        if(cercaInTab(kilometro)){//trovata
+    } else {//esiste almeno 1 stazione
+        if (cercaInTab(kilometro)) {//trovata
             //printf("stazione gia presente: impssibile aggiungere stazione al kilometro %d\n", kilometro);
             printf("non aggiunta\n");
             return 2;
-        }else{//non trovata: ok possiamo aggiungerla
+        } else {//non trovata: ok possiamo aggiungerla
             //printf("aggiungo stazione al kilometro %d\n", kilometro);
             printf("aggiunta\n");
             s = sIniziale;
@@ -819,35 +820,59 @@ int aggiungiStazione(int kilometro){
             initializeStation(support);
             support->km = kilometro;
 
-            aggiungiStazioneDS(kilometro, support);
 
-            if(s->km > kilometro){//inserimento all inizio lista (1 posto)
-                support->nextStazione = (struct stazione *)s;
-                s->preStazione = (struct stazione *)support;
+            if (s->km > kilometro) {//inserimento all inizio lista (1 posto)
+                aggiungiStazioneDS(kilometro, support);
+                support->nextStazione = (struct stazione *) s;
+                s->preStazione = (struct stazione *) support;
                 sIniziale = support;
                 insertIntoTable(kilometro, support);
                 aggiornaDipendenze(support);
                 return 1;
             }//non va inserita in cima alla lista: o è in mezzo o all ultimo posto
-            while(s != NULL){//while TRUE
-                if(s->km > kilometro){//ins in mezzo
-                    ((stazione*)(s->preStazione))->nextStazione = (struct stazione *)support;
-                    support->preStazione = s->preStazione;
-                    support->nextStazione = (struct stazione*)s;
-                    s->preStazione = (struct stazione*)support;
+            if (s->nextStazione == NULL) {//inserimento all'ultimo posto
+                aggiungiStazioneDS(kilometro, support);
+                s->nextStazione = (struct stazione *) support;
+                support->preStazione = (struct stazione *) s;
+                insertIntoTable(kilometro, support);
+                aggiornaDipendenze(support);
+                return 1;
+            }
+            s = ricercaVicinoDS(kilometro);
+            if (s->km > kilometro) {//va attaccato prima di s
+                aggiungiStazioneDS(kilometro, support);
+                ((stazione *) (s->preStazione))->nextStazione = (struct stazione *) support;
+                support->preStazione = s->preStazione;
+                support->nextStazione = (struct stazione *) s;
+                s->preStazione = (struct stazione *) support;
+                insertIntoTable(kilometro, support);
+                aggiornaDipendenze(support);
+                return 1;
+            }else{//va attaccato dopo s
+                if (s->nextStazione == NULL) {//inserimento all'ultimo posto
+                    aggiungiStazioneDS(kilometro, support);
+                    s->nextStazione = (struct stazione *) support;
+                    support->preStazione = (struct stazione *) s;
                     insertIntoTable(kilometro, support);
                     aggiornaDipendenze(support);
                     return 1;
                 }
-                if(s->nextStazione == NULL){//inserimento all'ultimo posto
-                    s->nextStazione = (struct stazione*)support;
-                    support->preStazione = (struct stazione *)s;
-                    insertIntoTable(kilometro, support);
-                    aggiornaDipendenze(support);
-                    return 1;
-                }else{
-                    s = (stazione*)s->nextStazione;
-                }
+                aggiungiStazioneDS(kilometro, support);
+                ((stazione *) (s->nextStazione))->preStazione = (struct stazione *) support;
+                support->nextStazione = s->nextStazione;
+                support->preStazione = (struct stazione *) s;
+                s->nextStazione = (struct stazione *) support;
+                insertIntoTable(kilometro, support);
+                aggiornaDipendenze(support);
+                return 1;
+            }
+            if (s->nextStazione == NULL) {//inserimento all'ultimo posto
+                aggiungiStazioneDS(kilometro, support);
+                s->nextStazione = (struct stazione *) support;
+                support->preStazione = (struct stazione *) s;
+                insertIntoTable(kilometro, support);
+                aggiornaDipendenze(support);
+                return 1;
             }
             return 0;//technically, we should NEVER reach this point. it means we exited while(true) loop (wrong behaviour)
         }
