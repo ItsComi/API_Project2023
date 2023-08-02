@@ -694,7 +694,7 @@ int trovaAlternativeInfame(){
     return 1;
 }
 
-int maxPrevStaz(stazione* s){//returns max previus reachable station or -1 if there is no station reachable
+int maxPrevStaz2(stazione* s){//returns max previus reachable station or -1 if there is no station reachable
     int max = -1;
     stazione* prec = s->preStazione;
     while(prec != NULL){
@@ -706,6 +706,31 @@ int maxPrevStaz(stazione* s){//returns max previus reachable station or -1 if th
         }
     }
     return max;
+}
+int maxPrevStaz(stazione * s){
+    int posizione = s->km-s->autoMax;
+    stazione * previus = NULL;
+    previus = ricercaVicinoDS(posizione);
+    if(previus == NULL) return -1;
+    if(previus == s) return -1;
+    if(previus->km == posizione){
+            return previus->km;
+    }else{
+        if(previus->km > posizione){
+            if(previus->km < s->km){
+                return previus->km;
+            }else{
+                return -1;
+            }
+        }else{//previus è precedente a posizione(km a cui arrivo al massimo al indietro)
+            if(previus->nextStazione != NULL){
+                if(previus->nextStazione != s){
+                    return previus->nextStazione->km;
+                }
+            }
+        }
+    }
+    return -1;
 }
 
 int rimuoviAuto(int kmStazione, int autonomia){
